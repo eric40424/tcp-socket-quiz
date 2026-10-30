@@ -10,6 +10,7 @@
 tcp-socket-quiz/
 ├── docs.html            ← 所有文件的網頁版 (雙擊用瀏覽器開啟)
 ├── EXAM.md              ← 試題本 (從這裡開始讀)
+├── TROUBLESHOOTING.md   ← 環境問題排解 (WSL / Docker)
 ├── Dockerfile           ← Ubuntu 22.04 考試環境
 ├── scripts/
 │   ├── setup-wsl-docker.sh  ← 在 WSL 裡安裝 Docker Engine 並 build image
@@ -76,9 +77,12 @@ python3 judge/judge.py
    它會安裝 Docker Engine、build image，並用參考解答驗證 judge（應為 100/100）
 3. 執行 `wsl --shutdown` 讓設定生效
 
-> 目前 Ubuntu 預設以 root 登入。要建立自己的帳號：
+> 用安裝腳本裝完時預設是 root。要建立自己的帳號：
 > `adduser <名字> && usermod -aG sudo,docker <名字> && printf '[user]\ndefault=<名字>\n' >> /etc/wsl.conf`，
 > 再執行 `wsl --shutdown`。
+
+遇到 `permission denied ... docker.sock`、`$PWD` 不知道填什麼、`wsl --install` 失敗等問題，請看
+**[環境問題排解 (TROUBLESHOOTING.md)](TROUBLESHOOTING.md)**。
 
 ### 方法二：Linux / macOS / WSL
 

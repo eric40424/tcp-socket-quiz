@@ -16,7 +16,7 @@ OUT = ROOT / "docs.html"
 
 # (分組名稱, 檔案清單, 是否為解答 — 解答需要點擊確認才會顯示)
 SECTIONS = [
-    ("總覽", ["README.md", "EXAM.md"], False),
+    ("總覽", ["README.md", "EXAM.md", "TROUBLESHOOTING.md"], False),
     ("教材", ["materials/README.md"] + sorted(
         p.relative_to(ROOT).as_posix() for p in (ROOT / "materials").glob("0*.md")
     ), False),
