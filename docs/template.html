@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCP Socket 上機考</title>
+<style>
+@font-face {
+  font-family: "CJK Mono 2x";
+  src: local("MingLiU"), local("細明體"), local("PMingLiU");
+  size-adjust: 109.96%;
+  unicode-range: U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
+}
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f6f7f9;
+  --bg-code: #f3f4f6;
+  --fg: #1f2328;
+  --fg-soft: #59636e;
+  --border: #d8dee4;
+  --accent: #0b6bcb;
+  --accent-soft: #e6f0fb;
+  --warn-bg: #fff8e6;
+  --warn-border: #e8b931;
+  --tok-keyword: #cf222e;
+  --tok-string: #0a3069;
+  --tok-number: #0550ae;
+  --tok-comment: #6e7781;
+  --tok-title: #8250df;
+  --tok-meta: #953800;
+}
+[data-theme="dark"] {
+  --bg: #16181d;
+  --bg-soft: #1d2026;
+  --bg-code: #23262e;
+  --fg: #e3e6ea;
+  --fg-soft: #9aa3ad;
+  --border: #33373f;
+  --accent: #5aa9f5;
+  --accent-soft: #1d2b3c;
+  --warn-bg: #2e2715;
+  --warn-border: #a5832a;
+  --tok-keyword: #ff7b72;
+  --tok-string: #a5d6ff;
+  --tok-number: #79c0ff;
+  --tok-comment: #8b949e;
+  --tok-title: #d2a8ff;
+  --tok-meta: #ffa657;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.75 -apple-system, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 240px;
+}
+
+/* ---------- 左側導覽 ---------- */
+#sidebar {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  background: var(--bg-soft);
+  border-right: 1px solid var(--border);
+  padding: 20px 14px;
+}
+#sidebar .brand { font-weight: 700; font-size: 17px; margin: 0 6px 4px; }
+#sidebar .build { color: var(--fg-soft); font-size: 12px; margin: 0 6px 14px; }
+#search {
+  width: 100%; padding: 7px 10px; margin-bottom: 12px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--fg); font: inherit; font-size: 14px;
+}
+.group { margin: 14px 6px 4px; font-size: 12px; font-weight: 700; color: var(--fg-soft); letter-spacing: .05em; }
+#nav a {
+  display: block; padding: 5px 10px; border-radius: 6px;
+  color: var(--fg); text-decoration: none; font-size: 14.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#nav a:hover { background: var(--accent-soft); }
+#nav a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+#nav .hits { color: var(--fg-soft); font-size: 12px; margin-left: 4px; }
+#theme {
+  margin: 20px 6px 0; padding: 5px 10px; font: inherit; font-size: 13px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--fg); cursor: pointer;
+}
+
+/* ---------- 內文 ---------- */
+main { padding: 36px 48px 80px; min-width: 0; }
+#content { max-width: 880px; margin: 0 auto; }
+#content h1 { font-size: 30px; line-height: 1.3; margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+#content h2 { font-size: 23px; margin: 40px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+#content h3 { font-size: 19px; margin: 30px 0 10px; }
+#content h4 { font-size: 16.5px; margin: 24px 0 8px; }
+#content h2, #content h3 { scroll-margin-top: 16px; }
+#content a { color: var(--accent); text-decoration: none; }
+#content a:hover { text-decoration: underline; }
+#content hr { border: 0; border-top: 1px solid var(--border); margin: 32px 0; }
+#content blockquote {
+  margin: 16px 0; padding: 8px 16px;
+  border-left: 4px solid var(--accent); background: var(--accent-soft);
+  border-radius: 0 6px 6px 0; color: var(--fg);
+}
+#content blockquote p { margin: 6px 0; }
+#content table { border-collapse: collapse; margin: 16px 0; display: block; overflow-x: auto; font-size: 15px; }
+#content th, #content td { border: 1px solid var(--border); padding: 7px 12px; text-align: left; vertical-align: top; }
+#content th { background: var(--bg-soft); }
+#content tr:nth-child(even) td { background: color-mix(in srgb, var(--bg-soft) 50%, transparent); }
+#content code {
+  font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace;
+  font-size: .88em; background: var(--bg-code); padding: .15em .4em; border-radius: 4px;
+}
+#content pre {
+  position: relative; background: var(--bg-code); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px; overflow-x: auto; line-height: 1.55;
+}
+#content pre code { background: none; padding: 0; font-size: 14px; }
+/* 沒標語言的區塊多半是 ASCII 圖：英文與框線用 Consolas，中文用縮放過的細明體，
+   讓一個中文字剛好等於兩個英文字寬 (Consolas 字寬 0.5498em × 2 = 1.0996em)；行距縮小讓框線連起來 */
+#content pre.diagram { line-height: 1.25; }
+#content pre.diagram code {
+  font-family: Consolas, "CJK Mono 2x", "Sarasa Mono TC", "Noto Sans Mono CJK TC", monospace;
+  font-size: 14.5px;
+}
+#content pre .copy {
+  position: absolute; top: 6px; right: 6px; padding: 2px 8px; font-size: 12px;
+  border: 1px solid var(--border); border-radius: 5px; background: var(--bg); color: var(--fg-soft);
+  cursor: pointer; opacity: 0; transition: opacity .15s;
+}
+#content pre:hover .copy { opacity: 1; }
+#content details {
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; margin: 10px 0;
+  background: var(--bg-soft);
+}
+#content details[open] { background: var(--bg); }
+#content summary { cursor: pointer; }
+#content details[open] summary { margin-bottom: 8px; }
+#content img { max-width: 100%; }
+mark { background: #ffe58a; color: inherit; border-radius: 2px; }
+[data-theme="dark"] mark { background: #6b5a12; }
+
+.pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); }
+.pager a {
+  flex: 1; display: block; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--fg); text-decoration: none;
+}
+.pager a:hover { border-color: var(--accent); }
+.pager .label { display: block; font-size: 12px; color: var(--fg-soft); }
+.pager .next { text-align: right; }
+
+.spoiler {
+  margin: 40px auto; max-width: 560px; padding: 28px; text-align: center;
+  background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px;
+}
+.spoiler h2 { margin-top: 0; border: 0 !important; }
+.spoiler button {
+  margin-top: 8px; padding: 8px 18px; font: inherit; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--warn-border); background: var(--bg); color: var(--fg);
+}
+
+/* ---------- 右側目錄 ---------- */
+#toc {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  padding: 36px 16px 20px 8px; font-size: 13.5px;
+}
+#toc .title { font-weight: 700; color: var(--fg-soft); font-size: 12px; margin-bottom: 8px; }
+#toc a { display: block; padding: 3px 0 3px 10px; color: var(--fg-soft); text-decoration: none; border-left: 2px solid var(--border); }
+#toc a.h3 { padding-left: 22px; font-size: 13px; }
+#toc a:hover { color: var(--accent); }
+#toc a.active { color: var(--accent); border-left-color: var(--accent); }
+
+/* ---------- 程式碼上色 (highlight.js token) ---------- */
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-literal, .hljs-type { color: var(--tok-keyword); }
+.hljs-string, .hljs-regexp, .hljs-char.escape_ { color: var(--tok-string); }
+.hljs-number, .hljs-symbol, .hljs-variable, .hljs-attr, .hljs-attribute { color: var(--tok-number); }
+.hljs-comment, .hljs-quote { color: var(--tok-comment); font-style: italic; }
+.hljs-title, .hljs-section, .hljs-title.function_ { color: var(--tok-title); }
+.hljs-meta, .hljs-params, .hljs-subst { color: var(--tok-meta); }
+
+/* ---------- RWD ---------- */
+@media (max-width: 1200px) {
+  body { grid-template-columns: 260px minmax(0, 1fr); }
+  #toc { display: none; }
+}
+@media (max-width: 760px) {
+  body { display: block; }
+  #sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+  main { padding: 24px 18px 60px; }
+}
+@media print {
+  body { display: block; }
+  #sidebar, #toc, .pager, .copy { display: none !important; }
+}
+</style>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="brand">TCP Socket 上機考</div>
+  <div class="build">產生時間 __BUILD_TIME__</div>
+  <input id="search" type="search" placeholder="搜尋全部文件…  ( / )">
+  <div id="nav"></div>
+  <button id="theme" type="button">切換深色 / 淺色</button>
+</nav>
+<main><article id="content"></article></main>
+<aside id="toc"></aside>
+
+<script>/*__MARKED__*/</script>
+<script>/*__HLJS__*/</script>
+<script>
+const DOCS = /*__DOCS__*/;
+
+const $ = (sel) => document.querySelector(sel);
+const content = $("#content");
+const nav = $("#nav");
+const toc = $("#toc");
+const search = $("#search");
+
+// ---------- 主題 ----------
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem("tcpquiz-theme", theme);
+}
+applyTheme(localStorage.getItem("tcpquiz-theme")
+  || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+$("#theme").onclick = () =>
+  applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+
+// ---------- 導覽 ----------
+function buildNav(query) {
+  const q = (query || "").trim().toLowerCase();
+  nav.innerHTML = "";
+  let group = null;
+  for (const doc of DOCS) {
+    let hits = 0;
+    if (q) {
+      const text = doc.md.toLowerCase();
+      for (let i = text.indexOf(q); i !== -1; i = text.indexOf(q, i + q.length)) hits++;
+      if (!hits && !doc.title.toLowerCase().includes(q)) continue;
+    }
+    if (doc.group !== group) {
+      group = doc.group;
+      const g = document.createElement("div");
+      g.className = "group";
+      g.textContent = group;
+      nav.appendChild(g);
+    }
+    const a = document.createElement("a");
+    a.href = "#/" + doc.path;
+    a.dataset.path = doc.path;
+    a.title = doc.title;
+    a.textContent = (doc.spoiler ? "🔒 " : "") + doc.title;
+    if (hits) {
+      const s = document.createElement("span");
+      s.className = "hits";
+      s.textContent = `(${hits})`;
+      a.appendChild(s);
+    }
+    nav.appendChild(a);
+  }
+  markActive();
+}
+function markActive() {
+  const cur = currentPath();
+  nav.querySelectorAll("a").forEach((a) => a.classList.toggle("active", a.dataset.path === cur));
+}
+search.addEventListener("input", () => { buildNav(search.value); render(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== search) { e.preventDefault(); search.focus(); }
+  if (e.key === "Escape" && document.activeElement === search) { search.value = ""; buildNav(); render(); }
+});
+
+// ---------- 路由 ----------
+function currentPath() {
+  const p = decodeURIComponent(location.hash.replace(/^#\/?/, "")).split("::")[0];
+  return DOCS.some((d) => d.path === p) ? p : DOCS[0].path;
+}
+function currentAnchor() {
+  return decodeURIComponent(location.hash).split("::")[1] || "";
+}
+
+function resolvePath(base, href) {
+  const parts = base.split("/").slice(0, -1);
+  for (const seg of href.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") parts.pop(); else parts.push(seg);
+  }
+  return parts.join("/");
+}
+
+function slugify(text, used) {
+  let slug = text.trim().toLowerCase()
+    .replace(/[\s]+/g, "-")
+    .replace(/[^\p{L}\p{N}\-_]/gu, "") || "section";
+  let s = slug, n = 1;
+  while (used.has(s)) s = `${slug}-${++n}`;
+  used.add(s);
+  return s;
+}
+
+// ---------- 渲染 ----------
+function render() {
+  const path = currentPath();
+  const doc = DOCS.find((d) => d.path === path);
+  document.title = `${doc.title} - TCP Socket 上機考`;
+  markActive();
+
+  if (doc.spoiler && sessionStorage.getItem("tcpquiz-spoiler") !== "ok") {
+    content.innerHTML = `
+      <div class="spoiler">
+        <h2>🔒 參考解答</h2>
+        <p>這一頁有所有 TODO 的答案與 bug 解析。<br>建議完成 <a href="#/EXAM.md">試題本</a> 並跑過 judge 之後再看。</p>
+        <button type="button" id="reveal">我考完了，顯示解答</button>
+      </div>`;
+    $("#reveal").onclick = () => { sessionStorage.setItem("tcpquiz-spoiler", "ok"); render(); };
+    toc.innerHTML = "";
+    return;
+  }
+
+  content.innerHTML = marked.parse(doc.md, { gfm: true });
+
+  // 文件之間的連結 → 站內導覽；外部連結 → 新分頁
+  content.querySelectorAll("a[href]").forEach((a) => {
+    const href = a.getAttribute("href");
+    if (/^[a-z]+:/i.test(href)) { a.target = "_blank"; a.rel = "noopener"; return; }
+    if (href.startsWith("#")) return;
+    const [file] = href.split("#");
+    const target = resolvePath(doc.path, file);
+    if (DOCS.some((d) => d.path === target)) a.href = "#/" + target;
+  });
+
+  // 標題 id 與右側目錄
+  const used = new Set();
+  const heads = [...content.querySelectorAll("h2, h3")];
+  heads.forEach((h) => { h.id = slugify(h.textContent, used); });
+  toc.innerHTML = heads.length ? '<div class="title">本頁目錄</div>' : "";
+  for (const h of heads) {
+    const a = document.createElement("a");
+    a.href = `#/${doc.path}::${h.id}`;
+    a.className = h.tagName.toLowerCase();
+    a.textContent = h.textContent;
+    toc.appendChild(a);
+  }
+
+  // 程式碼上色 + 複製按鈕
+  content.querySelectorAll("pre code").forEach((code) => {
+    const lang = (code.className.match(/language-(\S+)/) || [])[1];
+    if (lang && hljs.getLanguage(lang)) hljs.highlightElement(code);
+    if (!lang) code.parentElement.classList.add("diagram");
+    const btn = document.createElement("button");
+    btn.className = "copy";
+    btn.type = "button";
+    btn.textContent = "複製";
+    btn.onclick = () => navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = "已複製";
+      setTimeout(() => (btn.textContent = "複製"), 1200);
+    });
+    code.parentElement.appendChild(btn);
+  });
+
+  // 搜尋關鍵字標記
+  const q = search.value.trim();
+  if (q) highlightText(content, q);
+
+  // 上一篇 / 下一篇
+  const i = DOCS.indexOf(doc);
+  const prev = DOCS[i - 1], next = DOCS[i + 1];
+  const pager = document.createElement("div");
+  pager.className = "pager";
+  pager.innerHTML =
+    (prev ? `<a class="prev" href="#/${prev.path}"><span class="label">← 上一篇</span>${prev.title}</a>` : "<span></span>") +
+    (next ? `<a class="next" href="#/${next.path}"><span class="label">下一篇 →</span>${next.title}</a>` : "<span></span>");
+  content.appendChild(pager);
+
+  const anchor = currentAnchor();
+  const el = anchor && document.getElementById(anchor);
+  if (el) el.scrollIntoView(); else if (!q) window.scrollTo(0, 0);
+  else (content.querySelector("mark") || content).scrollIntoView({ block: "center" });
+  updateTocActive();
+}
+
+function highlightText(root, q) {
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) if (re.test(walker.currentNode.nodeValue)) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    node.nodeValue.replace(re, (m, idx) => {
+      frag.append(node.nodeValue.slice(last, idx));
+      const mark = document.createElement("mark");
+      mark.textContent = m;
+      frag.append(mark);
+      last = idx + m.length;
+    });
+    frag.append(node.nodeValue.slice(last));
+    node.replaceWith(frag);
+  }
+}
+
+function updateTocActive() {
+  const links = [...toc.querySelectorAll("a")];
+  let current = null;
+  for (const a of links) {
+    const id = a.getAttribute("href").split("::")[1];
+    const h = document.getElementById(id);
+    if (h && h.getBoundingClientRect().top < 120) current = a;
+  }
+  links.forEach((a) => a.classList.toggle("active", a === current));
+}
+
+window.addEventListener("scroll", updateTocActive, { passive: true });
+window.addEventListener("hashchange", render);
+buildNav();
+render();
+</script>
+</body>
+</html>

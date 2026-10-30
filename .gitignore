@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+# P1 編譯產物
+problems/p1_echo/server
+problems/p1_echo/client
+solutions/p1_echo/server
+solutions/p1_echo/client
